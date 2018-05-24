@@ -1,0 +1,30 @@
+Goals of DbArray
+
+* Accessable as an array
+
+* Persistant on disk
+
+* Plugin filters
+
+* Only current element in memmory
+
+* Nestable
+
+* Plugin Backend, db4, gdbm, sqlite
+
+* Speed
+
+* Sleep/Wake
+
+
+Uses
+
+* SQL results cache
+
+* Preferences
+
+* Session data
+
+* Shared data
+
+* Caching

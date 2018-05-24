@@ -1,0 +1,11 @@
+#!/usr/bin/php
+<?PHP
+$file = $argv[1];
+
+$id = dba_popen($file, 'r', 'qdbm');
+
+for ($key = dba_firstkey($id); $key !== false; $key = dba_nextkey($id)) {
+    print $key . ' => ' . dba_fetch($key, $id) . PHP_EOL;  
+}
+
+?>
