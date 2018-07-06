@@ -63,16 +63,17 @@ use phprax\dbArray;
  *  default: empty array
  *
  * // Simple
- * $db = new DbArray(array('file' => '/tmp/foo.db');
+ * $db = new DbArray(['file' => '/tmp/foo.db']);
  * $db['key'] = $value;
  * $db->delete();
  *
  * // Nesting is okay
  *
- * $db1 = new DbArray(array('file' => '/tmp/foo.db'));
- * $db1['key'] = DbArray::create(array(
+ * $db1 = new DbArray(['file' => '/tmp/foo.db']);
+ * $db1['key'] = DbArray::create([
  *      'file' => '/tmp/bar.db',
- *      'import' => array('A', 'B', 'C')));
+ *      'import' => ['A', 'B', 'C']
+ * ]);
  *
  * print $db1['key'][0]."\n"; // Will print 'A'
  *
@@ -220,8 +221,9 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         'unlink'        => false,
         'import'        => false,
         'debug'         => false,
-        'processors'    => array('serialize', 'gzip'),
-        'hidden_keys'   => array()];
+        'processors'    => ['serialize', 'gzip'],
+        'hidden_keys'   => []
+    ];
 
     /**
      * db last mtime
