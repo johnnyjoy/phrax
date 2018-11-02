@@ -1,4 +1,5 @@
-<?PHP
+<?php
+/* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
 namespace phprax;
 use phprax\dbArray;
 /**
@@ -21,6 +22,7 @@ use phprax\dbArray;
  * @todo      Check into creating a options class for the options
  * @todo      Set dba_optimize to fire off after counting n number of writes
  * @todo      camel case things.
+ * @todo      Test access to the same db file by multiple processes
  *
  * @example
  *
@@ -83,12 +85,12 @@ use phprax\dbArray;
  */
 
 /**
- * vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4:
+ * dbArray class that allows access to dba files as an array
  *
  * @category  DBA
  * @package   dbArray
  * @author    James Dornan <james@catch22.com>
- * @copyright 2003-2008 James Dornan <james@catch22.com>
+ * @copyright 2003-2018 James Dornan <james@catch22.com>
  * @license   http://www.phpractical.com/license/0_50.txt P4PHP
  * @version   Release: 0.5
  * @link      http://www.phpractical.com/DbArray
@@ -190,7 +192,8 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
     private $_perferred_handlers     = [
         'gdbm',
         'db4',
-        'flatfile'];
+        'flatfile'
+    ];
 
     /**
      * hidden keys
@@ -286,8 +289,13 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
      */
     public function __sleep()
     {
-        return ['_options', '_hidden_keys', '_hidden_keys_backup',
-                '_value', '_key'];
+        return [
+            '_options',
+            '_hidden_keys',
+            '_hidden_keys_backup',
+            '_value',
+            '_key'
+        ];
     }
 
     /**
@@ -307,7 +315,7 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
      */
     public function __toString()
     {
-        return  serialize($this->toArray());
+        return serialize($this->toArray());
     }
 
     /**
@@ -325,8 +333,12 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         if (!is_object($this->_fileinfo) || $method == 'openFile')
             return false;
 
-	if (method_exists($this->_fileinfo, $method))
-            return call_user_func_array([$this->_fileinfo, $method], $parameters);
+        if (method_exists($this->_fileinfo, $method)) {
+            return call_user_func_array(
+                [$this->_fileinfo, $method],
+                $parameters
+            );
+        }
 
         // This would be a good place to call user extensions
         return false;
@@ -458,8 +470,9 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
     {
         $this->close();
 
-        return file_exists($this->_options['file']) ?
-            \unlink($this->_options['file']) : true;
+        return file_exists($this->_options['file'])
+            ? \unlink($this->_options['file'])
+            : true;
     }
 
     /**
@@ -485,12 +498,17 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         // Check to see if this will be a new file.
         $created = !\file_exists($this->_options['file']);
 
-        $this->_resource = \dba_popen($this->_options['file'], $this->getMode(),
-            $this->getHandler());
+        $this->_resource = \dba_popen(
+            $this->_options['file'],
+            $this->getMode(),
+            $this->getHandler()
+        );
 
-
-        if ($this->_resource === false)
-            throw new \Exception('cannot open file, ' . $this->_options['file']);
+        if ($this->_resource === false) {
+            throw new \Exception(
+                'cannot open file, ' . $this->_options['file']
+            );
+        }
 
         // Backup of hidden keys so that they may be reset later.
         if ($this->_hidden_keys_backup === false)
@@ -528,8 +546,11 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         $this->_last_mtime = $this->getMTime();
 
         // Load storage processors.
-        if (is_array($this->_options['processors']))
-            $this->_storage_object = new dbArray\storage($this->_options['processors']);
+        if (\is_array($this->_options['processors'])) {
+            $this->_storage_object = new dbArray\storage(
+                $this->_options['processors']
+            );
+        }
 
         return true;
     }
@@ -723,13 +744,17 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
             if (!isset($this[$key]))
                 continue;
 
-            if (\in_array($key, $this->_hidden_keys)
-                    && !\in_array($key, $this->_hidden_keys_backup)) {
+            if (
+                \in_array($key, $this->_hidden_keys)
+                && !\in_array($key, $this->_hidden_keys_backup)
+            ) {
                 $this['__count']++;
             }
 
-            if (!\in_array($key, $this->_hidden_keys)
-                    && \in_array($key, $this->_hidden_keys_backup)) {
+            if (
+                !\in_array($key, $this->_hidden_keys)
+                && \in_array($key, $this->_hidden_keys_backup)
+            ) {
                 $this['__count']--;
             }
 
@@ -788,8 +813,9 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
      */
     private function _read($data)
     {
-        return $this->_storage_object ?
-            $this->_storage_object->read($data) : $data;
+        return $this->_storage_object
+            ? $this->_storage_object->read($data)
+            : $data;
     }
 
     /**
@@ -840,9 +866,9 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
      * be altered. This is done only if the dba file is opened writable.
      * 
      * Next we need to flush the changed variable to the dba file. This is done
-     * by checking if we need to run flushValue at the start of almost any method.
-     * Using a tick function did not appear to work well enough, and was like
-     * using a fully automatic machine gun to swat a fly.
+     * by checking if we need to run flushValue at the start of almost any
+     * method. Using a trick function did not appear to work well enough, and
+     * was like using a fully automatic machine gun to swat a fly.
      *
      * @param string $offset array key
      * @param boolean $flush should we flag for later flushing, default true
@@ -874,7 +900,11 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
 
         if (($value = \dba_fetch($offset, $this->_resource)) !== false) {
             $this->_flushNew   = false;
-            $this->_value      = ($offset === '__count' ? $value : $this->_read($value));
+            $this->_value      = (
+                $offset === '__count'
+                ? $value
+                : $this->_read($value)
+            );
             $this->_lastValue  = $this->_value;
             $this->_key        = $offset;
             $this->_get_key    = $offset;
@@ -1081,7 +1111,7 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         $returnArray = [];
 
         foreach ($this as $offset=>$value) {
-            // If we are only looking for certain kids, we'll skip the others
+            // If we are only looking for certain kiys, we'll skip the others
             if (\count($keys) > 0 && \in_array($offset, $keys, true))
                 continue;
 
@@ -1155,8 +1185,10 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
             return false;
 
         foreach($this as $key=>$value) {
-            if ((!$strict && $value == $needle) ||
-                ($strict && $value === $needle)) {
+            if (
+                (!$strict && $value == $needle)
+                || ($strict && $value === $needle)
+            ) {
                 $this->rewind();
                 return $key;
             }
@@ -1179,16 +1211,18 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
 
         $keys = [];
 
-        for ($key = \dba_firstkey($this->_resource); $key !== false;
-                $key = \dba_nextkey($this->_resource)) {
-
+        for (
+            $key = \dba_firstkey($this->_resource);
+            $key !== false;
+            $key = \dba_nextkey($this->_resource)
+        ) {
             if (!$hidden && $this->isHidden($key))
                 continue;
 
             $keys[] = $key;
         }
 
-        \sort($keys);
+        @\sort($keys);
 
         return $keys;
     }
@@ -1204,4 +1238,3 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
             echo $msg . PHP_EOL;
     }
 }
-?>
