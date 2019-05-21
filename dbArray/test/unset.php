@@ -1,4 +1,3 @@
-#!/web/bin/php
 <?PHP
 namespace phprax;
 /**
@@ -42,11 +41,10 @@ $opts1 = [
 
 $db = dbArray::create($opts1);
 
-for($count = 0; $count < 50; $count++) {
+for($count = 0; $count < 5000; $count++) {
     $db[] = sha1(base_convert(mt_rand(0x19A100, 0x39AA3FF), 10, 36));
 }
 
 foreach($db as $key=>$value) {
     unset($db[$key]);
 }
-
