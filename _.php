@@ -185,7 +185,10 @@ class _
      */
     private static function _nsAutoLoad($class_name)
     {
-        require_once(str_replace('\\', '/', $class_name) . '.php');
+        $filename = str_replace('\\', '/', $class_name) . '.php';
+
+        if (file_exists(stream_resolve_include_path($filename)))
+            require_once(str_replace('\\', '/', $class_name) . '.php');
     }
 
     /**

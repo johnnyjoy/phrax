@@ -30,7 +30,7 @@ $tmpDir = (isset($_ENV['TMP_DIR']) ? $_ENV['TMP_DIR'] : '/tmp');
 // $tmpDir = '/run/shm';
 
 $opts1 = [
-    'handler' => 'qdbm',
+    'handler' => 'db4',
     'file'    => $tmpDir . DIRECTORY_SEPARATOR . 'SpeedTest.db'
 ];
 
