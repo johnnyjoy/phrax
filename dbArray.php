@@ -333,12 +333,8 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         if (!is_object($this->_fileinfo) || $method == 'openFile')
             return false;
 
-        if (method_exists($this->_fileinfo, $method)) {
-            return call_user_func_array(
-                [$this->_fileinfo, $method],
-                $parameters
-            );
-        }
+        if (method_exists($this->_fileinfo, $method))
+            return call_user_func_array([$this->_fileinfo, $method], $parameters);
 
         // This would be a good place to call user extensions
         return false;
@@ -429,8 +425,8 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
 
         // Illegal combinations
         if ($readonly && ($create || $truncate)) {
-            throw new \Exception('Cannot combine the create or truncate '
-                . 'options with the readonly option.');
+            $create   = false;
+            $truncate = false;
         }
 
         if ($create && $truncate) {
@@ -498,17 +494,12 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         // Check to see if this will be a new file.
         $created = !\file_exists($this->_options['file']);
 
-        $this->_resource = \dba_popen(
-            $this->_options['file'],
-            $this->getMode(),
-            $this->getHandler()
-        );
+        $this->_resource = \dba_popen($this->_options['file'], $this->getMode(),
+            $this->getHandler());
 
-        if ($this->_resource === false) {
-            throw new \Exception(
-                'cannot open file, ' . $this->_options['file']
-            );
-        }
+
+        if ($this->_resource === false)
+            throw new \Exception('cannot open file, ' . $this->_options['file']);
 
         // Backup of hidden keys so that they may be reset later.
         if ($this->_hidden_keys_backup === false)
@@ -546,11 +537,8 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         $this->_last_mtime = $this->getMTime();
 
         // Load storage processors.
-        if (\is_array($this->_options['processors'])) {
-            $this->_storage_object = new dbArray\storage(
-                $this->_options['processors']
-            );
-        }
+        if (is_array($this->_options['processors']))
+            $this->_storage_object = new dbArray\storage($this->_options['processors']);
 
         return true;
     }
@@ -813,9 +801,8 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
      */
     private function _read($data)
     {
-        return $this->_storage_object
-            ? $this->_storage_object->read($data)
-            : $data;
+        return $this->_storage_object ?
+            $this->_storage_object->read($data) : $data;
     }
 
     /**
@@ -851,6 +838,9 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
         \ob_end_clean();
 
         $this->offsetSet($this->_get_key, $this->_value);
+
+        if (!$this->_options['readonly'])
+            \dba_sync($this->_resource);
     }
 
     /**
@@ -866,9 +856,9 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
      * be altered. This is done only if the dba file is opened writable.
      * 
      * Next we need to flush the changed variable to the dba file. This is done
-     * by checking if we need to run flushValue at the start of almost any
-     * method. Using a trick function did not appear to work well enough, and
-     * was like using a fully automatic machine gun to swat a fly.
+     * by checking if we need to run flushValue at the start of almost any method.
+     * Using a trick function did not appear to work well enough, and was like
+     * using a fully automatic machine gun to swat a fly.
      *
      * @param string $offset array key
      * @param boolean $flush should we flag for later flushing, default true
@@ -900,11 +890,7 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
 
         if (($value = \dba_fetch($offset, $this->_resource)) !== false) {
             $this->_flushNew   = false;
-            $this->_value      = (
-                $offset === '__count'
-                ? $value
-                : $this->_read($value)
-            );
+            $this->_value      = ($offset === '__count' ? $value : $this->_read($value));
             $this->_lastValue  = $this->_value;
             $this->_key        = $offset;
             $this->_get_key    = $offset;
@@ -1093,7 +1079,7 @@ class dbArray implements \Iterator, \ArrayAccess, \Countable {
      */
     public function count()
     {
-        return isset($this['__count']) ? $this['__count'] : 0;
+        return isset($this['__count']) ? (int) $this['__count'] : 0;
     }
 
     /**
